@@ -86,6 +86,29 @@ class App {
         }
 }
 
+/*
+                        filteredIssues.forEach { issue ->
+                            val messageText = buildString {
+                                append("Новый issue в ${subscription.repository}\n")
+                                append("Title: ${issue.getString("title")}\n")
+                                append("URL: ${issue.getString("html_url")}\n")
+                                append("Author: ${issue.getJSONObject("user").getString("login")}\n")
+                                append("Created at: ${issue.getString("created_at")}\n")
+                                val labels = issue.optJSONArray("labels")?.let { labels ->
+                                    (0 until labels.length()).joinToString {
+                                        labels.getJSONObject(it).getString("name")
+                                    }
+                                } ?: "нет тегов"
+                                append("Labels: $labels")
+                            }
+
+                            bot?.sendMessage(
+                                chatId = ChatId.fromId(subscription.chatId),
+                                text = messageText
+                            )
+                        }
+ */
+
 fun main() {
     val env = dotenv()
 
