@@ -3,9 +3,29 @@
 
 [versions]
 guava = "33.3.1-jre"
+telegram = "6.1.0"
+coroutines = "1.10.2"
+plugin-serialization = "2.1.20"
+json-serialization = "1.8.1"
+dotenv = "6.5.1"
+okhttp-bom = "4.12.0"
+mockk = "1.13.10"
 
 [libraries]
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
+telegram = { module = "io.github.kotlin-telegram-bot.kotlin-telegram-bot:telegram", version.ref = "telegram" }
+coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm", version.ref = "coroutines" }
+coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+kotlinx-json-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "json-serialization" }
+kotlin-dotenv = { module = "io.github.cdimascio:dotenv-kotlin", version.ref = "dotenv" }
+okhttp-bom = { module = "com.squareup.okhttp3:okhttp-bom", version.ref = "okhttp-bom" }
+okhttp = { module = "com.squareup.okhttp3:okhttp" }
+okhttp-logging = { module = "com.squareup.okhttp3:logging-interceptor" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit5" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version = "2.1.0" }
+kotlinx-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "plugin-serialization" }
+
+
