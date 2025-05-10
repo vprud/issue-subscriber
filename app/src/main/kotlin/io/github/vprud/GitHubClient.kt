@@ -50,6 +50,7 @@ class GitHubClient(
     private val githubToken: String,
 ) {
     private val apiVersion = "2022-11-28"
+    private val json = Json { ignoreUnknownKeys = true }
 
     fun fetchNewIssues(
         repository: String,
@@ -70,7 +71,7 @@ class GitHubClient(
             throw RuntimeException("Failed to fetch issues: ${response.code} ${response.message}")
         }
 
-        return Json.decodeFromString<List<GitHubIssue>>(response.body?.string() ?: "[]")
+        return json.decodeFromString<List<GitHubIssue>>(response.body?.string() ?: "[]")
     }
 
     fun fetchLatestIssue(repository: String): GitHubIssue? {
@@ -89,6 +90,6 @@ class GitHubClient(
             throw RuntimeException("Failed to fetch latest issue: ${response.code} ${response.message}")
         }
 
-        return Json.decodeFromString<List<GitHubIssue>>(response.body?.string() ?: "[]").firstOrNull()
+        return json.decodeFromString<List<GitHubIssue>>(response.body?.string() ?: "[]").firstOrNull()
     }
 }

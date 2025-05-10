@@ -23,6 +23,7 @@ class GitHubClientTest {
             "url": "https://api.github.com/repos/test/test/issues/1",
             "repository_url": "https://api.github.com/repos/test/test",
             "html_url": "https://github.com/test/test/issues/1",
+            "labels_url": "https://api.github.com/test/test/issues/1/labels{/name}",
             "number": 1,
             "title": "Test Issue",
             "labels": [],
