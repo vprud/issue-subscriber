@@ -3,98 +3,23 @@
  */
 package io.github.vprud
 
-import com.github.kotlintelegrambot.bot
-import com.github.kotlintelegrambot.dispatch
-import com.github.kotlintelegrambot.dispatcher.command
-import com.github.kotlintelegrambot.dispatcher.telegramError
-import com.github.kotlintelegrambot.entities.ChatId
-import com.github.kotlintelegrambot.entities.ParseMode
-import com.github.kotlintelegrambot.entities.keyboard.KeyboardButton
-import com.github.kotlintelegrambot.logging.LogLevel
 import io.github.cdimascio.dotenv.dotenv
-
-fun run(tgToken: String) {
-    val bot =
-        bot {
-            token = tgToken
-            timeout = 30
-            logLevel = LogLevel.Network.Body
-
-            dispatch {
-                command("start") {
-                    val result =
-                        bot.sendMessage(
-                            chatId = ChatId.fromId(message.chat.id),
-                            text =
-                                """
-                                Hi 👋
-                                
-                                I'm a bot for tracking new GitHub repository issues.
-                                
-                                Available commands:
-                                
-                                /subscribe <owner/repo> [tags] - subscribe to repository updates (tags separated by commas)
-                                /unsubscribe <owner/repo> - unsubscribe from a repository
-                                /mysubscriptions - show current subscriptions
-                                /help - show this message
-                                """.trimIndent(),
-                            parseMode = ParseMode.MARKDOWN,
-                        )
-
-                    result.fold(
-                        {
-                            // do something here with the response
-                        },
-                        {
-                            // do something with the error
-                        },
-                    )
-                }
-
-                command("help") {
-                    bot.sendMessage(
-                        chatId = ChatId.fromId(message.chat.id),
-                        text =
-                            """
-                            Available commands:
-                            
-                            /subscribe <owner/repo> [tags] - subscribe to repository updates (tags separated by commas)
-                            /unsubscribe <owner/repo> - unsubscribe from a repository
-                            /mysubscriptions - show current subscriptions
-                            /help - show this message
-                            """.trimIndent(),
-                        parseMode = ParseMode.MARKDOWN,
-                    )
-                }
-
-                telegramError {
-                    println(error.getErrorMessage())
-                }
-            }
-        }
-
-    bot.startPolling()
-}
-
-fun generateUsersButton(): List<List<KeyboardButton>> =
-    listOf(
-        listOf(KeyboardButton("Request location (not supported on desktop)", requestLocation = true)),
-        listOf(KeyboardButton("Request contact", requestContact = true)),
-    )
-
-class App {
-    val greeting: String
-        get() {
-            return "Hello World! from ${System.getProperty("java.vendor")} ${System.getProperty("java.version")}"
-        }
-}
+import okhttp3.OkHttpClient
 
 fun main() {
     val env = dotenv()
 
-    val tgToken = env["TG_TOKEN"]
-    val githubToken = env["GITHUB_TOKEN"]
+    val tgToken = env["TG_TOKEN"] ?: error("TG_TOKEN not set in .env")
+    val githubToken = dotenv()["GITHUB_TOKEN"] ?: error("GITHUB_TOKEN not set in .env")
 
-    println(App().greeting)
-    run(tgToken)
+    val httpClient = OkHttpClient()
+    val gitHubClient = GitHubClient(httpClient, githubToken)
+    val tracker = GitHubIssueTracker(gitHubClient)
+    val checker = IssueUpdateChecker(tracker)
+    val botService = createDefaultBotService(checker)
+
+    botService.startBot(
+        tgToken,
+        tracker,
+    )
 }
