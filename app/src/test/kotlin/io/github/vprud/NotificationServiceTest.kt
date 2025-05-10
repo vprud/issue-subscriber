@@ -11,16 +11,18 @@ class NotificationServiceTest {
 
     @Test
     fun `checkAndNotify should call notify for each update`() {
-        val issue = testIssue(
-            number = 1,
-            title = "Issue 1",
-            labels = emptyList(),
-        )
+        val issue =
+            testIssue(
+                number = 1,
+                title = "Issue 1",
+                labels = emptyList(),
+            )
 
-        every { issueUpdateService.checkForUpdates() } returns mapOf(
-            1L to listOf(issue),
-            2L to listOf(issue, issue),
-        )
+        every { issueUpdateService.checkForUpdates() } returns
+            mapOf(
+                1L to listOf(issue),
+                2L to listOf(issue, issue),
+            )
 
         val notifier = mockk<(Long, GitHubIssue) -> Unit>(relaxed = true)
 

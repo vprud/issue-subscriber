@@ -17,7 +17,8 @@ class GitHubClientTest {
     private val mockResponseBody = mockk<ResponseBody>()
     private val githubClient = GitHubClient(mockClient, "test-token")
 
-    private val sampleIssueJson = """
+    private val sampleIssueJson =
+        """
         [{
             "url": "https://api.github.com/repos/test/test/issues/1",
             "repository_url": "https://api.github.com/repos/test/test",
@@ -31,7 +32,7 @@ class GitHubClientTest {
             "updated_at": "2024-03-20T12:00:00Z",
             "body": "Test body"
         }]
-    """.trimIndent()
+        """.trimIndent()
 
     @Test
     fun `fetchNewIssues returns parsed issues when successful`() {
@@ -53,7 +54,10 @@ class GitHubClientTest {
         assertNull(issue)
     }
 
-    private fun setupMockResponse(code: Int, body: String) {
+    private fun setupMockResponse(
+        code: Int,
+        body: String,
+    ) {
         every { mockResponseBody.string() } returns body
         every { mockResponse.body } returns mockResponseBody
         every { mockResponse.isSuccessful } returns (code == 200)

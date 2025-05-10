@@ -28,35 +28,44 @@ data class Subscription(
 class SubscriptionManager {
     private val subscriptions = mutableMapOf<Long, MutableMap<String, Subscription>>()
 
-    fun addSubscription(chatId: Long, repository: String, labels: Set<String> = emptySet()) {
+    fun addSubscription(
+        chatId: Long,
+        repository: String,
+        labels: Set<String> = emptySet(),
+    ) {
         val userSubscriptions = subscriptions.getOrPut(chatId) { mutableMapOf() }
         userSubscriptions[repository] = Subscription(chatId, repository, labels)
     }
 
-    fun removeSubscription(chatId: Long, repository: String): Boolean {
+    fun removeSubscription(
+        chatId: Long,
+        repository: String,
+    ): Boolean {
         val userSubscriptions = subscriptions[chatId] ?: return false
         return userSubscriptions.remove(repository) != null
     }
 
-    fun getUserSubscriptions(chatId: Long): List<Subscription> {
-        return subscriptions[chatId]?.values?.toList() ?: emptyList()
-    }
+    fun getUserSubscriptions(chatId: Long): List<Subscription> = subscriptions[chatId]?.values?.toList() ?: emptyList()
 
-    fun getAllSubscriptions(): List<Subscription> {
-        return subscriptions.flatMap { it.value.values }
-    }
+    fun getAllSubscriptions(): List<Subscription> = subscriptions.flatMap { it.value.values }
 
-    fun updateLastChecked(chatId: Long, repository: String, lastIssueId: Int) {
+    fun updateLastChecked(
+        chatId: Long,
+        repository: String,
+        lastIssueId: Int,
+    ) {
         subscriptions[chatId]?.get(repository)?.lastCheckedIssueId = lastIssueId
     }
 
-    fun getSubscription(chatId: Long, repository: String): Subscription? {
-        return subscriptions[chatId]?.get(repository)
-    }
+    fun getSubscription(
+        chatId: Long,
+        repository: String,
+    ): Subscription? = subscriptions[chatId]?.get(repository)
 
-    fun hasSubscription(chatId: Long, repository: String): Boolean {
-        return subscriptions[chatId]?.containsKey(repository) ?: false
-    }
+    fun hasSubscription(
+        chatId: Long,
+        repository: String,
+    ): Boolean = subscriptions[chatId]?.containsKey(repository) ?: false
 }
 
 class IssueUpdateService(
@@ -66,8 +75,10 @@ class IssueUpdateService(
     fun checkForUpdates(): Map<Long, List<GitHubIssue>> {
         val updates = mutableMapOf<Long, MutableList<GitHubIssue>>()
 
-        val subscriptionsByRepo = subscriptionManager.getAllSubscriptions()
-            .groupBy { it.repository }
+        val subscriptionsByRepo =
+            subscriptionManager
+                .getAllSubscriptions()
+                .groupBy { it.repository }
 
         subscriptionsByRepo.forEach { (repo, subs) ->
             try {
@@ -76,12 +87,14 @@ class IssueUpdateService(
                 val newIssues = gitHubClient.fetchNewIssues(repo, lastCheckedId)
 
                 subs.forEach { sub ->
-                    val filteredIssues = newIssues.filter { issue ->
-                        // Если labels не указаны, показываем все issues
-                        sub.labels.isEmpty() || issue.labels.any { label ->
-                            sub.labels.contains(label.name)
+                    val filteredIssues =
+                        newIssues.filter { issue ->
+                            // Если labels не указаны, показываем все issues
+                            sub.labels.isEmpty() ||
+                                issue.labels.any { label ->
+                                    sub.labels.contains(label.name)
+                                }
                         }
-                    }
 
                     if (filteredIssues.isNotEmpty()) {
                         updates.getOrPut(sub.chatId) { mutableListOf() }.addAll(filteredIssues)
@@ -117,19 +130,25 @@ class NotificationService(
 class GitHubIssueTracker(
     private val gitHubClient: GitHubClient,
     private val subscriptionManager: SubscriptionManager = SubscriptionManager(),
-    private val notificationService: NotificationService = IssueUpdateService(gitHubClient, subscriptionManager).let { NotificationService(it) },
+    private val notificationService: NotificationService =
+        IssueUpdateService(gitHubClient, subscriptionManager).let {
+            NotificationService(it)
+        },
 ) {
-    fun subscribe(chatId: Long, repository: String, labels: Set<String> = emptySet()) {
+    fun subscribe(
+        chatId: Long,
+        repository: String,
+        labels: Set<String> = emptySet(),
+    ) {
         subscriptionManager.addSubscription(chatId, repository, labels)
     }
 
-    fun unsubscribe(chatId: Long, repository: String): Boolean {
-        return subscriptionManager.removeSubscription(chatId, repository)
-    }
+    fun unsubscribe(
+        chatId: Long,
+        repository: String,
+    ): Boolean = subscriptionManager.removeSubscription(chatId, repository)
 
-    fun getSubscriptions(chatId: Long): List<Subscription> {
-        return subscriptionManager.getUserSubscriptions(chatId)
-    }
+    fun getSubscriptions(chatId: Long): List<Subscription> = subscriptionManager.getUserSubscriptions(chatId)
 
     fun checkForUpdates(notify: (chatId: Long, issue: GitHubIssue) -> Unit) {
         notificationService.checkAndNotify(notify)

@@ -1,6 +1,10 @@
 package io.github.vprud
 
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class SubscriptionManagerTest {
     private val manager = SubscriptionManager()

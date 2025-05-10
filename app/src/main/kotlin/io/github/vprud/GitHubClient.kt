@@ -51,14 +51,19 @@ class GitHubClient(
 ) {
     private val apiVersion = "2022-11-28"
 
-    fun fetchNewIssues(repository: String, lastCheckedIssueId: Int?): List<GitHubIssue> {
+    fun fetchNewIssues(
+        repository: String,
+        lastCheckedIssueId: Int?,
+    ): List<GitHubIssue> {
         val url = "https://api.github.com/repos/$repository/issues?state=all&sort=created&direction=desc"
-        val request = Request.Builder()
-            .url(url)
-            .addHeader("Accept", "application/vnd.github+json")
-            .addHeader("Authorization", "Bearer $githubToken")
-            .addHeader("X-GitHub-Api-Version", apiVersion)
-            .build()
+        val request =
+            Request
+                .Builder()
+                .url(url)
+                .addHeader("Accept", "application/vnd.github+json")
+                .addHeader("Authorization", "Bearer $githubToken")
+                .addHeader("X-GitHub-Api-Version", apiVersion)
+                .build()
 
         val response = httpClient.newCall(request).execute()
         if (!response.isSuccessful) {
@@ -70,12 +75,14 @@ class GitHubClient(
 
     fun fetchLatestIssue(repository: String): GitHubIssue? {
         val url = "https://api.github.com/repos/$repository/issues?state=all&sort=created&direction=desc&per_page=1"
-        val request = Request.Builder()
-            .url(url)
-            .addHeader("Accept", "application/vnd.github+json")
-            .addHeader("Authorization", "Bearer $githubToken")
-            .addHeader("X-GitHub-Api-Version", apiVersion)
-            .build()
+        val request =
+            Request
+                .Builder()
+                .url(url)
+                .addHeader("Accept", "application/vnd.github+json")
+                .addHeader("Authorization", "Bearer $githubToken")
+                .addHeader("X-GitHub-Api-Version", apiVersion)
+                .build()
 
         val response = httpClient.newCall(request).execute()
         if (!response.isSuccessful) {

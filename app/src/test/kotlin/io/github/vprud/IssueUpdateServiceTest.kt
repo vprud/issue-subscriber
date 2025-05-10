@@ -1,8 +1,6 @@
 package io.github.vprud
 
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -14,22 +12,26 @@ class IssueUpdateServiceTest {
 
     @Test
     fun `checkForUpdates should return filtered issues by labels`() {
-        val issue1 = testIssue(
-            number = 1,
-            title = "Issue 1",
-            labels = listOf(GitHubIssue.Label(1, "url", "bug", "red")),
-        )
-        val issue2 = testIssue(
-            number = 2,
-            title = "Issue 2",
-            labels = listOf(GitHubIssue.Label(2, "url", "feature", "blue")),
-        )
+        val issue1 =
+            testIssue(
+                number = 1,
+                title = "Issue 1",
+                labels = listOf(GitHubIssue.Label(1, "url", "bug", "red")),
+            )
+        val issue2 =
+            testIssue(
+                number = 2,
+                title = "Issue 2",
+                labels = listOf(GitHubIssue.Label(2, "url", "feature", "blue")),
+            )
 
-        every { subscriptionManager.getAllSubscriptions() } returns listOf(
-            Subscription(1, "repo1", setOf("bug")),
-            Subscription(2, "repo1", setOf("feature")),
-        )
+        every { subscriptionManager.getAllSubscriptions() } returns
+            listOf(
+                Subscription(1, "repo1", setOf("bug")),
+                Subscription(2, "repo1", setOf("feature")),
+            )
         every { gitHubClient.fetchNewIssues("repo1", any()) } returns listOf(issue1, issue2)
+        every { subscriptionManager.updateLastChecked(any(), any(), any()) } just Runs
 
         val updates = service.checkForUpdates()
 
@@ -38,15 +40,18 @@ class IssueUpdateServiceTest {
         assertEquals(1, updates[2]?.size)
         assertEquals("Issue 2", updates[2]?.get(0)?.title)
 
-        verify { subscriptionManager.updateLastChecked(1, "repo1", 1) }
-        verify { subscriptionManager.updateLastChecked(2, "repo1", 2) }
+        verify {
+            subscriptionManager.updateLastChecked(1, "repo1", 1)
+            subscriptionManager.updateLastChecked(2, "repo1", 2)
+        }
     }
 
     @Test
     fun `checkForUpdates should handle exceptions gracefully`() {
-        every { subscriptionManager.getAllSubscriptions() } returns listOf(
-            Subscription(1, "repo1"),
-        )
+        every { subscriptionManager.getAllSubscriptions() } returns
+            listOf(
+                Subscription(1, "repo1"),
+            )
         every { gitHubClient.fetchNewIssues("repo1", any()) } throws RuntimeException("API error")
 
         val updates = service.checkForUpdates()

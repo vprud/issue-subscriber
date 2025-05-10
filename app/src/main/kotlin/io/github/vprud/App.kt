@@ -14,70 +14,73 @@ import com.github.kotlintelegrambot.logging.LogLevel
 import io.github.cdimascio.dotenv.dotenv
 
 fun run(tgToken: String) {
-    val bot = bot {
-        token = tgToken
-        timeout = 30
-        logLevel = LogLevel.Network.Body
+    val bot =
+        bot {
+            token = tgToken
+            timeout = 30
+            logLevel = LogLevel.Network.Body
 
-        dispatch {
-            command("start") {
-                val result = bot.sendMessage(
-                    chatId = ChatId.fromId(message.chat.id),
-                    text = """
-                            Hi 👋
-                            
-                            I'm a bot for tracking new GitHub repository issues.
-                            
+            dispatch {
+                command("start") {
+                    val result =
+                        bot.sendMessage(
+                            chatId = ChatId.fromId(message.chat.id),
+                            text =
+                                """
+                                Hi 👋
+                                
+                                I'm a bot for tracking new GitHub repository issues.
+                                
+                                Available commands:
+                                
+                                /subscribe <owner/repo> [tags] - subscribe to repository updates (tags separated by commas)
+                                /unsubscribe <owner/repo> - unsubscribe from a repository
+                                /mysubscriptions - show current subscriptions
+                                /help - show this message
+                                """.trimIndent(),
+                            parseMode = ParseMode.MARKDOWN,
+                        )
+
+                    result.fold(
+                        {
+                            // do something here with the response
+                        },
+                        {
+                            // do something with the error
+                        },
+                    )
+                }
+
+                command("help") {
+                    bot.sendMessage(
+                        chatId = ChatId.fromId(message.chat.id),
+                        text =
+                            """
                             Available commands:
                             
                             /subscribe <owner/repo> [tags] - subscribe to repository updates (tags separated by commas)
                             /unsubscribe <owner/repo> - unsubscribe from a repository
                             /mysubscriptions - show current subscriptions
                             /help - show this message
-                    """.trimIndent(),
-                    parseMode = ParseMode.MARKDOWN,
-                )
+                            """.trimIndent(),
+                        parseMode = ParseMode.MARKDOWN,
+                    )
+                }
 
-                result.fold(
-                    {
-                        // do something here with the response
-                    },
-                    {
-                        // do something with the error
-                    },
-                )
-            }
-
-            command("help") {
-                bot.sendMessage(
-                    chatId = ChatId.fromId(message.chat.id),
-                    text = """
-                            Available commands:
-                            
-                            /subscribe <owner/repo> [tags] - subscribe to repository updates (tags separated by commas)
-                            /unsubscribe <owner/repo> - unsubscribe from a repository
-                            /mysubscriptions - show current subscriptions
-                            /help - show this message
-                    """.trimIndent(),
-                    parseMode = ParseMode.MARKDOWN,
-                )
-            }
-
-            telegramError {
-                println(error.getErrorMessage())
+                telegramError {
+                    println(error.getErrorMessage())
+                }
             }
         }
-    }
 
     bot.startPolling()
 }
 
-fun generateUsersButton(): List<List<KeyboardButton>> {
-    return listOf(
+fun generateUsersButton(): List<List<KeyboardButton>> =
+    listOf(
         listOf(KeyboardButton("Request location (not supported on desktop)", requestLocation = true)),
         listOf(KeyboardButton("Request contact", requestContact = true)),
     )
-}
 
 class App {
     val greeting: String
@@ -85,29 +88,6 @@ class App {
             return "Hello World! from ${System.getProperty("java.vendor")} ${System.getProperty("java.version")}"
         }
 }
-
-/*
-                        filteredIssues.forEach { issue ->
-                            val messageText = buildString {
-                                append("Новый issue в ${subscription.repository}\n")
-                                append("Title: ${issue.getString("title")}\n")
-                                append("URL: ${issue.getString("html_url")}\n")
-                                append("Author: ${issue.getJSONObject("user").getString("login")}\n")
-                                append("Created at: ${issue.getString("created_at")}\n")
-                                val labels = issue.optJSONArray("labels")?.let { labels ->
-                                    (0 until labels.length()).joinToString {
-                                        labels.getJSONObject(it).getString("name")
-                                    }
-                                } ?: "нет тегов"
-                                append("Labels: $labels")
-                            }
-
-                            bot?.sendMessage(
-                                chatId = ChatId.fromId(subscription.chatId),
-                                text = messageText
-                            )
-                        }
- */
 
 fun main() {
     val env = dotenv()
