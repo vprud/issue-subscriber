@@ -1,10 +1,12 @@
 package io.github.vprud
 
+import kotlinx.datetime.Clock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import kotlin.time.Duration.Companion.hours
 
 @Serializable
 data class GitHubIssue(
@@ -56,7 +58,12 @@ class GitHubClient(
         repository: String,
         lastCheckedIssueId: Int?,
     ): List<GitHubIssue> {
-        val url = "https://api.github.com/repos/$repository/issues?state=all&sort=created&direction=desc&since=$"
+        val now =
+            Clock.System
+                .now()
+                .minus(1.hours)
+                .toString()
+        val url = "https://api.github.com/repos/$repository/issues?state=all&sort=created&direction=desc&since=$now"
         val request =
             Request
                 .Builder()

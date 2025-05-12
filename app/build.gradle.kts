@@ -37,6 +37,7 @@ dependencies {
     implementation(platform(libs.okhttp.bom))
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
+    implementation(libs.kotlinx.datetime)
 
     testImplementation(libs.mockk)
     testImplementation(libs.kotlin.test.junit)
