@@ -66,6 +66,8 @@ class TelegramBotServiceImpl(
                 chatId = ChatId.fromId(chatId),
                 text = messageText,
             )
+
+            // TODO update
         }
     }
 

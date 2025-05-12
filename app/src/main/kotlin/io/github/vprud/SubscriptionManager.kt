@@ -90,10 +90,13 @@ class IssueUpdateService(
                     val filteredIssues =
                         newIssues.filter { issue ->
                             // Если labels не указаны, показываем все issues
-                            sub.labels.isEmpty() ||
-                                issue.labels.any { label ->
-                                    sub.labels.contains(label.name)
-                                }
+                            (
+                                sub.labels.isEmpty() ||
+                                    issue.labels.any { label ->
+                                        sub.labels.contains(label.name)
+                                    }
+                            ) &&
+                                issue.number > (sub.lastCheckedIssueId ?: 0)
                         }
 
                     if (filteredIssues.isNotEmpty()) {
@@ -116,12 +119,16 @@ class IssueUpdateService(
 class NotificationService(
     private val issueUpdateService: IssueUpdateService,
 ) {
-    fun checkAndNotify(notify: (chatId: Long, issue: GitHubIssue) -> Unit) {
+    fun checkAndNotify(
+        notify: (chatId: Long, issue: GitHubIssue) -> Unit,
+        callback: (chatId: Long, issue: GitHubIssue) -> Unit,
+    ) {
         val updates = issueUpdateService.checkForUpdates()
 
         updates.forEach { (chatId, issues) ->
             issues.forEach { issue ->
                 notify(chatId, issue)
+                callback(chatId, issue)
             }
         }
     }
@@ -151,6 +158,12 @@ class GitHubIssueTracker(
     fun getSubscriptions(chatId: Long): List<Subscription> = subscriptionManager.getUserSubscriptions(chatId)
 
     fun checkForUpdates(notify: (chatId: Long, issue: GitHubIssue) -> Unit) {
-        notificationService.checkAndNotify(notify)
+        notificationService.checkAndNotify(notify) { chatId, issue ->
+            subscriptionManager.updateLastChecked(
+                chatId,
+                issue.repositoryUrl,
+                issue.number,
+            )
+        }
     }
 }

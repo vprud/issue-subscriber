@@ -56,7 +56,7 @@ class GitHubClient(
         repository: String,
         lastCheckedIssueId: Int?,
     ): List<GitHubIssue> {
-        val url = "https://api.github.com/repos/$repository/issues?state=all&sort=created&direction=desc"
+        val url = "https://api.github.com/repos/$repository/issues?state=all&sort=created&direction=desc&since=$"
         val request =
             Request
                 .Builder()

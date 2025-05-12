@@ -26,7 +26,7 @@ class NotificationServiceTest {
 
         val notifier = mockk<(Long, GitHubIssue) -> Unit>(relaxed = true)
 
-        service.checkAndNotify(notifier)
+        service.checkAndNotify(notifier) { _, _ -> }
 
         verify(exactly = 1) { notifier(1, issue) }
         verify(exactly = 2) { notifier(2, issue) }
