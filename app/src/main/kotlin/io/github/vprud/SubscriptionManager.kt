@@ -1,5 +1,7 @@
 package io.github.vprud
 
+import org.jetbrains.exposed.sql.transactions.transaction
+
 data class Subscription(
     val chatId: Long,
     val repository: String,
@@ -25,47 +27,39 @@ data class Subscription(
     }
 }
 
-class SubscriptionManager {
-    private val subscriptions = mutableMapOf<Long, MutableMap<String, Subscription>>()
-
+class SubscriptionManager(
+    private val subscriptionRepository: SubscriptionRepository,
+) {
     fun addSubscription(
         chatId: Long,
         repository: String,
         labels: Set<String> = emptySet(),
-    ) {
-        val userSubscriptions = subscriptions.getOrPut(chatId) { mutableMapOf() }
-        userSubscriptions[repository] = Subscription(chatId, repository, labels)
-    }
+    ) = transaction { subscriptionRepository.add(Subscription(chatId, repository, labels)) }
 
     fun removeSubscription(
         chatId: Long,
         repository: String,
-    ): Boolean {
-        val userSubscriptions = subscriptions[chatId] ?: return false
-        return userSubscriptions.remove(repository) != null
-    }
+    ) = transaction { subscriptionRepository.remove(chatId, repository) }
 
-    fun getUserSubscriptions(chatId: Long): List<Subscription> = subscriptions[chatId]?.values?.toList() ?: emptyList()
+    fun getUserSubscriptions(chatId: Long): List<Subscription> = transaction { subscriptionRepository.getByChatId(chatId) }
 
-    fun getAllSubscriptions(): List<Subscription> = subscriptions.flatMap { it.value.values }
+    fun getAllSubscriptions(): List<Subscription> = transaction { subscriptionRepository.getAll() }
 
     fun updateLastChecked(
         chatId: Long,
         repository: String,
         lastIssueId: Int,
-    ) {
-        subscriptions[chatId]?.get(repository)?.lastCheckedIssueId = lastIssueId
-    }
+    ) = transaction { subscriptionRepository.updateLastChecked(chatId, repository, lastIssueId) }
 
     fun getSubscription(
         chatId: Long,
         repository: String,
-    ): Subscription? = subscriptions[chatId]?.get(repository)
+    ) = transaction { subscriptionRepository.get(chatId, repository) }
 
     fun hasSubscription(
         chatId: Long,
         repository: String,
-    ): Boolean = subscriptions[chatId]?.containsKey(repository) ?: false
+    ) = transaction { subscriptionRepository.get(chatId, repository) != null }
 }
 
 class IssueUpdateService(
@@ -136,7 +130,7 @@ class NotificationService(
 
 class GitHubIssueTracker(
     private val gitHubClient: GitHubClient,
-    private val subscriptionManager: SubscriptionManager = SubscriptionManager(),
+    private val subscriptionManager: SubscriptionManager,
     private val notificationService: NotificationService =
         IssueUpdateService(gitHubClient, subscriptionManager).let {
             NotificationService(it)

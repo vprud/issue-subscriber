@@ -11,10 +11,20 @@ fun main() {
 
     val tgToken = env["TG_TOKEN"] ?: error("TG_TOKEN not set in .env")
     val githubToken = dotenv()["GITHUB_TOKEN"] ?: error("GITHUB_TOKEN not set in .env")
+    val dbConfig =
+        DbConfig(
+            url = env["DB_URL"] ?: error("DB_URL not set in .env"),
+            user = env["DB_USER"] ?: error("DB_USER not set in .env"),
+            password = env["DB_PASSWORD"] ?: error("DB_PASSWORD not set in .env"),
+        )
 
+    Database.init(dbConfig)
+
+    val subscriptionRepository = SubscriptionRepositoryImpl()
     val httpClient = OkHttpClient()
     val gitHubClient = GitHubClient(httpClient, githubToken)
-    val tracker = GitHubIssueTracker(gitHubClient)
+    val subscriptionManager = SubscriptionManager(subscriptionRepository)
+    val tracker = GitHubIssueTracker(gitHubClient, subscriptionManager)
     val checker = IssueUpdateChecker(tracker)
     val botService = createDefaultBotService(checker)
 

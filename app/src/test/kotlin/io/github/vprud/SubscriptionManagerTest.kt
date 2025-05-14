@@ -1,13 +1,11 @@
 package io.github.vprud
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import io.mockk.mockk
+import kotlin.test.*
 
 class SubscriptionManagerTest {
-    private val manager = SubscriptionManager()
+    private val repository = mockk<SubscriptionRepository>()
+    private val manager = SubscriptionManager(repository)
 
     @Test
     fun `should add new subscription`() {

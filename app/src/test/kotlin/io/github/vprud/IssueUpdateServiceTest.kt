@@ -31,7 +31,7 @@ class IssueUpdateServiceTest {
                 Subscription(2, "repo1", setOf("feature")),
             )
         every { gitHubClient.fetchNewIssues("repo1", any()) } returns listOf(issue1, issue2)
-        every { subscriptionManager.updateLastChecked(any(), any(), any()) } just Runs
+        every { subscriptionManager.updateLastChecked(any(), any(), any()) } just Awaits
 
         val updates = service.checkForUpdates()
 
@@ -67,7 +67,7 @@ class IssueUpdateServiceTest {
                 Subscription(2, "repo1", lastCheckedIssueId = 2),
             )
         every { gitHubClient.fetchNewIssues("repo1", any()) } returns listOf(issue1, issue2)
-        every { subscriptionManager.updateLastChecked(any(), any(), any()) } just Runs
+        every { subscriptionManager.updateLastChecked(any(), any(), any()) } just Awaits
 
         val updates = service.checkForUpdates()
 
