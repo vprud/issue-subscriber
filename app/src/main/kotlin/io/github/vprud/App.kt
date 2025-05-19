@@ -6,6 +6,13 @@ package io.github.vprud
 import io.github.cdimascio.dotenv.dotenv
 import okhttp3.OkHttpClient
 
+class App {
+    val greeting: String
+        get() {
+            return "Hello World! from ${System.getProperty("java.vendor")} ${System.getProperty("java.version")}"
+        }
+}
+
 fun main() {
     val env = dotenv()
 
