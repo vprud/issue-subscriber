@@ -1,5 +1,6 @@
 package io.github.vprud
 
+import io.github.vprud.table.IssueTable
 import io.github.vprud.table.SubscriptionTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -17,6 +18,7 @@ object Database {
 
         transaction(database) {
             SchemaUtils.create(SubscriptionTable)
+            SchemaUtils.create(IssueTable)
         }
     }
 }

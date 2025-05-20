@@ -65,49 +65,48 @@ class SubscriptionManager(
 class IssueUpdateService(
     private val gitHubClient: GitHubClient,
     private val subscriptionManager: SubscriptionManager,
+    private val issueRepository: IssueRepository,
 ) {
     fun checkForUpdates(): Map<Long, List<GitHubIssue>> {
         val updates = mutableMapOf<Long, MutableList<GitHubIssue>>()
+        val subscriptions = subscriptionManager.getAllSubscriptions()
+        val subscriptionsByRepo = subscriptions.groupBy { it.repository }
 
-        val subscriptionsByRepo =
-            subscriptionManager
-                .getAllSubscriptions()
-                .groupBy { it.repository }
-
-        subscriptionsByRepo.forEach { (repo, subs) ->
+        subscriptionsByRepo.keys.forEach { repo ->
             try {
-                val lastCheckedId = subs.maxOfOrNull { it.lastCheckedIssueId ?: 0 } ?: 0
-
+                val subsForRepo = subscriptionsByRepo[repo] ?: emptyList()
+                val lastCheckedId = subsForRepo.maxOfOrNull { it.lastCheckedIssueId ?: 0 } ?: 0
                 val newIssues = gitHubClient.fetchNewIssues(repo, lastCheckedId)
 
-                subs.forEach { sub ->
-                    val filteredIssues =
-                        newIssues.filter { issue ->
-                            // Если labels не указаны, показываем все issues
-                            (
-                                sub.labels.isEmpty() ||
-                                    issue.labels.any { label ->
-                                        sub.labels.contains(label.name)
-                                    }
-                            ) &&
-                                issue.number > (sub.lastCheckedIssueId ?: 0)
-                        }
+                newIssues.forEach { issue ->
+                    if (!issueRepository.exists(issue.number, repo)) {
+                        issueRepository.save(issue)
+                    }
 
-                    if (filteredIssues.isNotEmpty()) {
-                        updates.getOrPut(sub.chatId) { mutableListOf() }.addAll(filteredIssues)
-                        // Обновляем lastCheckedIssueId для подписки
-                        val maxIssueId = filteredIssues.maxOf { it.number }
-                        subscriptionManager.updateLastChecked(sub.chatId, repo, maxIssueId)
+                    subsForRepo.forEach { sub ->
+                        if (isIssueRelevant(issue, sub)) {
+                            updates.getOrPut(sub.chatId) { mutableListOf() }.add(issue)
+                            subscriptionManager.updateLastChecked(sub.chatId, repo, issue.number)
+                        }
                     }
                 }
             } catch (e: Exception) {
-                // Логируем ошибку и продолжаем проверку других репозиториев
                 println("Error checking updates for $repo: ${e.message}")
             }
         }
 
         return updates
     }
+
+    private fun isIssueRelevant(
+        issue: GitHubIssue,
+        sub: Subscription,
+    ): Boolean =
+        (
+            sub.labels.isEmpty() ||
+                issue.labels.any { label -> sub.labels.contains(label.name) }
+        ) &&
+            issue.number > (sub.lastCheckedIssueId ?: 0)
 }
 
 class NotificationService(
@@ -131,8 +130,9 @@ class NotificationService(
 class GitHubIssueTracker(
     private val gitHubClient: GitHubClient,
     private val subscriptionManager: SubscriptionManager,
+    private val issueRepository: IssueRepository,
     private val notificationService: NotificationService =
-        IssueUpdateService(gitHubClient, subscriptionManager).let {
+        IssueUpdateService(gitHubClient, subscriptionManager, issueRepository).let {
             NotificationService(it)
         },
 ) {

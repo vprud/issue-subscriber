@@ -25,7 +25,7 @@ data class GitHubIssue(
     val createdAt: String,
     @SerialName("updated_at")
     val updatedAt: String,
-    val body: String,
+    val body: String? = null,
 ) {
     @Serializable
     data class Label(

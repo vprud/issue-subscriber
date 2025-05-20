@@ -53,7 +53,11 @@ class SubscriptionRepositoryImpl : SubscriptionRepository {
     override fun remove(
         chatId: Long,
         repository: String,
-    ): Boolean = SubscriptionTable.deleteWhere { (SubscriptionTable.chatId eq chatId) and (SubscriptionTable.repository eq repository) } > 0
+    ): Boolean =
+        SubscriptionTable.deleteWhere {
+            (SubscriptionTable.chatId eq chatId) and
+                (SubscriptionTable.repository eq repository)
+        } > 0
 
     override fun getAll(): List<Subscription> = SubscriptionTable.selectAll().map { it.toSubscription() }
 

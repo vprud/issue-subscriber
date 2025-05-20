@@ -28,10 +28,11 @@ fun main() {
     Database.init(dbConfig)
 
     val subscriptionRepository = SubscriptionRepositoryImpl()
+    val issueRepository = IssueRepositoryImpl()
     val httpClient = OkHttpClient()
     val gitHubClient = GitHubClient(httpClient, githubToken)
     val subscriptionManager = SubscriptionManager(subscriptionRepository)
-    val tracker = GitHubIssueTracker(gitHubClient, subscriptionManager)
+    val tracker = GitHubIssueTracker(gitHubClient, subscriptionManager, issueRepository)
     val checker = IssueUpdateChecker(tracker)
     val botService = createDefaultBotService(checker)
 
