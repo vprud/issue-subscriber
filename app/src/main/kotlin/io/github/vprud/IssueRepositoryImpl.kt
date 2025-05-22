@@ -1,7 +1,9 @@
 package io.github.vprud
 
 import io.github.vprud.table.IssueTable
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Instant
 
@@ -22,11 +24,12 @@ class IssueRepositoryImpl : IssueRepository {
                     it[issueNumber] = issue.number
                     it[repository] = getRepoFromUrl(issue.repositoryUrl)
                     it[title] = issue.title
+                    it[body] = issue.body ?: ""
+                    it[labels] = issue.labels.map { label -> label.name }
                     it[htmlUrl] = issue.htmlUrl
                     it[state] = issue.state
                     it[createdAt] = Instant.parse(issue.createdAt)
                     it[updatedAt] = Instant.parse(issue.updatedAt)
-                    it[body] = issue.body ?: ""
                 }
             }
         }

@@ -19,7 +19,6 @@ class IssueUpdateChecker(
         checkJob =
             scope.launch {
                 while (isActive) {
-                    println("Checking for updates...")
                     tracker.checkForUpdates(notify)
                     delay(checkIntervalMillis)
                 }
