@@ -14,7 +14,7 @@ class App {
 }
 
 fun main() {
-    val env = dotenv()
+    val env = dotenv { ignoreIfMissing = true }
 
     val tgToken = env["TG_TOKEN"] ?: error("TG_TOKEN not set in .env")
     val githubToken = dotenv()["GITHUB_TOKEN"] ?: error("GITHUB_TOKEN not set in .env")

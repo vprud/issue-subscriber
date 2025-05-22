@@ -3,6 +3,7 @@
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.1.0-blue.svg)](https://kotlinlang.org)
 [![Telegram](https://img.shields.io/badge/Telegram-Bot-blue)](https://core.telegram.org/bots)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Coverage Status](https://coveralls.io/repos/github/vprud/issue-subscriber/badge.svg?branch=main)](https://coveralls.io/github/vprud/issue-subscriber?branch=main)
 
 A Telegram bot that helps you track new issues in your favorite open-source projects on GitHub. 
 Get notified when new issues are created in repositories you care about, filtered by labels if desired.
