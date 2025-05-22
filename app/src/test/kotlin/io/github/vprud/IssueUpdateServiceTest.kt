@@ -8,7 +8,8 @@ import kotlin.test.assertTrue
 class IssueUpdateServiceTest {
     private val gitHubClient = mockk<GitHubClient>()
     private val subscriptionManager = mockk<SubscriptionManager>()
-    private val service = IssueUpdateService(gitHubClient, subscriptionManager)
+    private val issueRepository = mockk<IssueRepository>()
+    private val service = IssueUpdateService(gitHubClient, subscriptionManager, issueRepository)
 
     @Test
     fun `checkForUpdates should return filtered issues by labels`() {

@@ -14,8 +14,8 @@ import kotlin.test.*
 
 class SubscriptionRepositoryImplTest {
     private lateinit var repository: SubscriptionRepositoryImpl
-    val schema = Schema("test")
-    val dbConfig =
+    private val schema = Schema("test")
+    private val dbConfig =
         DbConfig(
             url = "jdbc:postgresql://localhost:5432/postgres",
             user = "postgres",

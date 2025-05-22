@@ -9,7 +9,8 @@ import kotlin.test.assertTrue
 class GitHubIssueTrackerTest {
     private val gitHubClient = mockk<GitHubClient>()
     private val subscriptionManager = mockk<SubscriptionManager>()
-    private val tracker = GitHubIssueTracker(gitHubClient, subscriptionManager)
+    private val issueRepository = mockk<IssueRepository>()
+    private val tracker = GitHubIssueTracker(gitHubClient, subscriptionManager, issueRepository)
 
     @Test
     fun `subscribe should delegate to subscription manager`() {
