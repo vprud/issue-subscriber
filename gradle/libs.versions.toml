@@ -13,7 +13,7 @@ mockk = "1.13.10"
 datetime = "0.6.2"
 driver = "42.6.0"
 pool = "5.0.1"
-orm = "0.44.0"
+orm = "0.61.0"
 
 [libraries]
 guava = { module = "com.google.guava:guava", version.ref = "guava" }

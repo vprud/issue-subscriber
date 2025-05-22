@@ -1,9 +1,7 @@
 package io.github.vprud
 
 import io.github.vprud.table.IssueTable
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Instant
 
@@ -38,7 +36,8 @@ class IssueRepositoryImpl : IssueRepository {
         repository: String,
     ) = transaction {
         IssueTable
-            .select {
+            .selectAll()
+            .where {
                 (IssueTable.issueNumber eq issueNumber) and (IssueTable.repository eq repository)
             }.count() > 0
     }

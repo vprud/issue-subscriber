@@ -111,6 +111,7 @@ class SubscriptionRepositoryImplTest {
                 Subscription(
                     chatId = 123L,
                     repository = "owner/repo",
+                    labels = setOf("bug"),
                 )
 
             newSuspendedTransaction {
@@ -139,9 +140,9 @@ class SubscriptionRepositoryImplTest {
         runBlocking {
             val subscriptions =
                 listOf(
-                    Subscription(123L, "owner/repo1"),
-                    Subscription(123L, "owner/repo2", setOf("bug")),
-                    Subscription(456L, "owner/repo3"),
+                    Subscription(123L, "owner/repo1", setOf("bug")),
+                    Subscription(123L, "owner/repo2", setOf("feature")),
+                    Subscription(456L, "owner/repo3", setOf("enhancement")),
                 )
 
             newSuspendedTransaction {
@@ -150,8 +151,8 @@ class SubscriptionRepositoryImplTest {
                 val result = repository.getAll()
 
                 assertEquals(3, result.size)
-                assertTrue(result.any { it.repository == "owner/repo1" && it.labels.isEmpty() })
-                assertTrue(result.any { it.repository == "owner/repo2" && it.labels == setOf("bug") })
+                assertTrue(result.any { it.repository == "owner/repo1" && it.labels == setOf("bug") })
+                assertTrue(result.any { it.repository == "owner/repo2" && it.labels == setOf("feature") })
                 assertTrue(result.any { it.repository == "owner/repo3" && it.chatId == 456L })
             }
         }
@@ -161,9 +162,9 @@ class SubscriptionRepositoryImplTest {
         runBlocking {
             val subscriptions =
                 listOf(
-                    Subscription(123L, "owner/repo1"),
-                    Subscription(123L, "owner/repo2"),
-                    Subscription(456L, "owner/repo3"),
+                    Subscription(123L, "owner/repo1", setOf("bug")),
+                    Subscription(123L, "owner/repo2", setOf("feature")),
+                    Subscription(456L, "owner/repo3", setOf("enhancement")),
                 )
 
             newSuspendedTransaction {
@@ -183,6 +184,7 @@ class SubscriptionRepositoryImplTest {
                 Subscription(
                     chatId = 123L,
                     repository = "owner/repo",
+                    labels = setOf("bug"),
                     lastCheckedIssueId = 100,
                 )
 
@@ -224,6 +226,7 @@ class SubscriptionRepositoryImplTest {
                 Subscription(
                     chatId = 123L,
                     repository = "owner/repo",
+                    labels = setOf("bug"),
                     lastCheckedIssueId = null,
                 )
 

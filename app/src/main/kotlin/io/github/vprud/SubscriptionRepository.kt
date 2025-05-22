@@ -33,7 +33,7 @@ class SubscriptionRepositoryImpl : SubscriptionRepository {
         Subscription(
             chatId = this[SubscriptionTable.chatId],
             repository = this[SubscriptionTable.repository],
-            labels = this[SubscriptionTable.labels]?.split(",")?.toSet() ?: emptySet(),
+            labels = this[SubscriptionTable.labels].toSet(),
             lastCheckedIssueId = this[SubscriptionTable.lastCheckedIssueId],
         )
 
@@ -42,7 +42,7 @@ class SubscriptionRepositoryImpl : SubscriptionRepository {
             SubscriptionTable.insert {
                 it[chatId] = subscription.chatId
                 it[repository] = subscription.repository
-                it[labels] = subscription.labels.takeIf { labels -> labels.isNotEmpty() }?.joinToString(",")
+                it[labels] = subscription.labels.toList()
                 it[lastCheckedIssueId] = subscription.lastCheckedIssueId
                 it[createdAt] = java.time.Instant.now()
             }
@@ -62,15 +62,18 @@ class SubscriptionRepositoryImpl : SubscriptionRepository {
     override fun getAll(): List<Subscription> = SubscriptionTable.selectAll().map { it.toSubscription() }
 
     override fun getByChatId(chatId: Long): List<Subscription> =
-        SubscriptionTable.select { SubscriptionTable.chatId eq chatId }.map { it.toSubscription() }
+        SubscriptionTable.selectAll().where { SubscriptionTable.chatId eq chatId }.map { it.toSubscription() }
 
     override fun get(
         chatId: Long,
         repository: String,
     ): Subscription? =
         SubscriptionTable
-            .select { (SubscriptionTable.chatId eq chatId) and (SubscriptionTable.repository eq repository) }
-            .singleOrNull()
+            .selectAll()
+            .where {
+                (SubscriptionTable.chatId eq chatId) and
+                    (SubscriptionTable.repository eq repository)
+            }.singleOrNull()
             ?.toSubscription()
 
     override fun updateLastChecked(
