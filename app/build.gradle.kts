@@ -64,7 +64,7 @@ testing {
 }
 
 ktlint {
-    version.set("0.50.0") // Версия ktlint
+    version.set("1.6.0")
     verbose.set(true)
     outputToConsole.set(true)
     coloredOutput.set(true)
