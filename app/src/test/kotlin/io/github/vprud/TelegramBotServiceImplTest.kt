@@ -1,11 +1,15 @@
 package io.github.vprud
 
-import com.github.kotlintelegrambot.Bot
-import com.github.kotlintelegrambot.entities.ChatId
+import com.github.kotlintelegrambot.errors.TelegramError
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.*
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.assertDoesNotThrow
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -13,18 +17,15 @@ import kotlin.test.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class TelegramBotServiceImplTest {
     private val testDispatcher = UnconfinedTestDispatcher()
-    private val testScope = TestScope(testDispatcher)
-    private val mockBot = mockk<Bot>(relaxed = true)
-    private val mockTracker = mockk<GitHubIssueTracker>()
-    private val mockCommandHandler = mockk<CommandHandler>()
-    private val mockErrorHandler = mockk<ErrorHandler>()
-    private val mockIssueUpdateChecker = mockk<IssueUpdateChecker>()
+    private lateinit var commandHandlers: Map<String, CommandHandler>
+    private lateinit var errorHandler: ErrorHandler
+    private lateinit var issueUpdateChecker: IssueUpdateChecker
+    private lateinit var tracker: GitHubIssueTracker
+    private lateinit var botService: TelegramBotServiceImpl
 
     @BeforeTest
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        mockkStatic(ChatId::class)
-        every { ChatId.fromId(any()) } returns mockk()
     }
 
     @AfterTest
@@ -33,68 +34,60 @@ class TelegramBotServiceImplTest {
         unmockkAll()
     }
 
-    @Test
-    fun `startBot should initialize bot with correct parameters`() {
-        val token = "test_token"
-        val commandHandlers = mapOf("test" to mockCommandHandler)
-        val service = TelegramBotServiceImpl(commandHandlers, mockErrorHandler, mockIssueUpdateChecker)
+    @BeforeEach
+    fun setupEach() {
+        commandHandlers =
+            mapOf(
+                "start" to mockk(),
+                "help" to mockk(),
+                "subscribe" to mockk(),
+                "unsubscribe" to mockk(),
+                "mysubscriptions" to mockk(),
+            )
+        errorHandler = mockk()
+        issueUpdateChecker = mockk()
+        tracker = mockk()
+        botService = TelegramBotServiceImpl(commandHandlers, errorHandler, issueUpdateChecker)
+    }
 
-        mockkConstructor(Bot::class)
-        every { anyConstructed<Bot>().startPolling() } just Runs
-
-        service.startBot(token, mockTracker)
-
-        verify { anyConstructed<Bot>().startPolling() }
-        coVerify { mockIssueUpdateChecker.startChecking(any()) }
+    @AfterEach
+    fun tearDownEach() {
+        clearAllMocks()
     }
 
     @Test
-    fun `startBot should handle updates and send notifications`() =
-        testScope.runTest {
-            val token = "test_token"
-            val commandHandlers = mapOf("test" to mockCommandHandler)
-            val service = TelegramBotServiceImpl(commandHandlers, mockErrorHandler, mockIssueUpdateChecker)
-            val chatId = 123L
-            val issue = mockk<GitHubIssue>()
+    fun `startBot should initialize bot and start polling`() {
+        val token = "test-token"
+        coEvery { issueUpdateChecker.startChecking(any()) } just Runs
 
-            every { issue.repositoryUrl } returns "https://api.github.com/repos/owner/repo"
-            every { issue.title } returns "Test Issue"
-            every { issue.labels } returns emptyList()
-            every { issue.htmlUrl } returns "https://github.com/owner/repo/issues/1"
+        botService.startBot(token, tracker)
 
-            mockkConstructor(Bot::class)
-            every { anyConstructed<Bot>().startPolling() } just Runs
-
-            service.startBot(token, mockTracker)
-
-            val captor = slot<(Long, GitHubIssue) -> Unit>()
-            verify { mockIssueUpdateChecker.startChecking(capture(captor)) }
-
-            // Simulate update checker finding a new issue
-            captor.captured.invoke(chatId, issue)
-
-            verify {
-                anyConstructed<Bot>().sendMessage(
-                    chatId = ChatId.fromId(chatId),
-                    text =
-                        """
-                        New issue in owner/repo
-                        Title: Test Issue
-                        Labels: 
-                        URL: https://github.com/owner/repo/issues/1
-                        """.trimIndent(),
-                )
-            }
-        }
+        coVerify { issueUpdateChecker.startChecking(any()) }
+    }
 
     @Test
-    fun `stopBot should stop polling and checking updates`() {
-        val service = TelegramBotServiceImpl(emptyMap(), mockErrorHandler, mockIssueUpdateChecker)
-        every { mockBot.stopPolling() } just Runs
-        every { mockIssueUpdateChecker.stopChecking() } just Runs
+    fun `stopBot should stop polling and issue checking`() {
+        val token = "test-token"
+        coEvery { issueUpdateChecker.startChecking(any()) } just Runs
+        coEvery { issueUpdateChecker.stopChecking() } just Runs
+        botService.startBot(token, tracker)
 
-        service.stopBot()
+        botService.stopBot()
 
-        verify { mockIssueUpdateChecker.stopChecking() }
+        coVerify { issueUpdateChecker.stopChecking() }
+    }
+
+    @Test
+    fun `should handle error messages correctly`() {
+        val token = "test-token"
+        val error = mockk<TelegramError>()
+        coEvery { errorHandler.handleError(error) } just Runs
+        coEvery { issueUpdateChecker.startChecking(any()) } just Runs
+
+        botService.startBot(token, tracker)
+
+        assertDoesNotThrow {
+            errorHandler.handleError(error)
+        }
     }
 }

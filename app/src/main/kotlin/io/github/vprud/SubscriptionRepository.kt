@@ -37,18 +37,15 @@ class SubscriptionRepositoryImpl : SubscriptionRepository {
             lastCheckedIssueId = this[SubscriptionTable.lastCheckedIssueId],
         )
 
-    override fun add(subscription: Subscription): Int {
-        val stmt =
-            SubscriptionTable.insert {
+    override fun add(subscription: Subscription): Int =
+        SubscriptionTable
+            .upsert {
                 it[chatId] = subscription.chatId
                 it[repository] = subscription.repository
                 it[labels] = subscription.labels.toList()
                 it[lastCheckedIssueId] = subscription.lastCheckedIssueId
                 it[createdAt] = java.time.Instant.now()
-            }
-
-        return stmt.insertedCount
-    }
+            }.insertedCount
 
     override fun remove(
         chatId: Long,
