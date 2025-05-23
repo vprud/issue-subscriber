@@ -22,6 +22,8 @@ plugins {
     application
 
     id("com.gradleup.shadow") version "8.3.3"
+    id("jacoco")
+    id("com.github.nbaztec.coveralls-jacoco") version "1.2.20"
 }
 
 repositories {
@@ -75,6 +77,26 @@ ktlint {
     filter {
         exclude("**/build/**")
     }
+}
+
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+}
+
+coverallsJacoco {
+    reportPath = "app/build/reports/jacoco/test/jacocoTestReport.xml"
 }
 
 tasks {
