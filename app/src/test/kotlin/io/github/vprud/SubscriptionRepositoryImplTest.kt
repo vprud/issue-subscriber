@@ -1,52 +1,14 @@
 package io.github.vprud
 
-import io.github.vprud.table.SubscriptionTable
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.Schema
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.*
 
+@ExtendWith(ExtensionDatabase::class)
 class SubscriptionRepositoryImplTest {
-    private lateinit var repository: SubscriptionRepositoryImpl
-    private val schema = Schema("test")
-    private val dbConfig =
-        DbConfig(
-            url = "jdbc:postgresql://localhost:5432/postgres",
-            user = "postgres",
-            password = "postgres",
-        )
-
-    @BeforeEach
-    fun setup() {
-        Database.connect(
-            url = dbConfig.url,
-            driver = "org.postgresql.Driver",
-            user = dbConfig.user,
-            password = dbConfig.password,
-        )
-
-        transaction {
-            SchemaUtils.createSchema(schema)
-            SchemaUtils.setSchema(schema)
-            SchemaUtils.create(SubscriptionTable)
-        }
-
-        repository = SubscriptionRepositoryImpl()
-    }
-
-    @AfterEach
-    fun tearDown() {
-        transaction {
-            SchemaUtils.drop(SubscriptionTable)
-            SchemaUtils.dropSchema(schema, cascade = true)
-        }
-    }
+    private val repository = SubscriptionRepositoryImpl()
 
     @Test
     fun `add should insert subscription and return inserted count`() =
@@ -60,8 +22,7 @@ class SubscriptionRepositoryImplTest {
                 )
 
             val result =
-                newSuspendedTransaction {
-                    SchemaUtils.setSchema(schema)
+                transaction {
                     repository.add(subscription)
                 }
 
@@ -79,8 +40,7 @@ class SubscriptionRepositoryImplTest {
                     lastCheckedIssueId = 100,
                 )
 
-            newSuspendedTransaction {
-                SchemaUtils.setSchema(schema)
+            transaction {
                 repository.add(subscription)
                 val result = repository.get(123L, "owner/repo")
 
@@ -96,8 +56,7 @@ class SubscriptionRepositoryImplTest {
     fun `get should return null if subscription not exists`() =
         runBlocking {
             val result =
-                newSuspendedTransaction {
-                    SchemaUtils.setSchema(schema)
+                transaction {
                     repository.get(999L, "nonexistent/repo")
                 }
 
@@ -114,8 +73,7 @@ class SubscriptionRepositoryImplTest {
                     labels = setOf("bug"),
                 )
 
-            newSuspendedTransaction {
-                SchemaUtils.setSchema(schema)
+            transaction {
                 repository.add(subscription)
                 val result = repository.remove(123L, "owner/repo")
 
@@ -127,8 +85,7 @@ class SubscriptionRepositoryImplTest {
     fun `remove should return false if subscription not exists`() =
         runBlocking {
             val result =
-                newSuspendedTransaction {
-                    SchemaUtils.setSchema(schema)
+                transaction {
                     repository.remove(999L, "nonexistent/repo")
                 }
 
@@ -145,8 +102,7 @@ class SubscriptionRepositoryImplTest {
                     Subscription(456L, "owner/repo3", setOf("enhancement")),
                 )
 
-            newSuspendedTransaction {
-                SchemaUtils.setSchema(schema)
+            transaction {
                 subscriptions.forEach { repository.add(it) }
                 val result = repository.getAll()
 
@@ -167,8 +123,7 @@ class SubscriptionRepositoryImplTest {
                     Subscription(456L, "owner/repo3", setOf("enhancement")),
                 )
 
-            newSuspendedTransaction {
-                SchemaUtils.setSchema(schema)
+            transaction {
                 subscriptions.forEach { repository.add(it) }
                 val result = repository.getByChatId(123L)
 
@@ -188,8 +143,7 @@ class SubscriptionRepositoryImplTest {
                     lastCheckedIssueId = 100,
                 )
 
-            newSuspendedTransaction {
-                SchemaUtils.setSchema(schema)
+            transaction {
                 repository.add(subscription)
                 repository.updateLastChecked(123L, "owner/repo", 150)
                 val updated = repository.get(123L, "owner/repo")
@@ -209,8 +163,7 @@ class SubscriptionRepositoryImplTest {
                     labels = emptySet(),
                 )
 
-            newSuspendedTransaction {
-                SchemaUtils.setSchema(schema)
+            transaction {
                 repository.add(subscription)
                 val result = repository.get(123L, "owner/repo")
 
@@ -230,8 +183,7 @@ class SubscriptionRepositoryImplTest {
                     lastCheckedIssueId = null,
                 )
 
-            newSuspendedTransaction {
-                SchemaUtils.setSchema(schema)
+            transaction {
                 repository.add(subscription)
                 val result = repository.get(123L, "owner/repo")
 

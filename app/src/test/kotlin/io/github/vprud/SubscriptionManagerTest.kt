@@ -1,10 +1,11 @@
 package io.github.vprud
 
-import io.mockk.mockk
+import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.*
 
+@ExtendWith(ExtensionDatabase::class)
 class SubscriptionManagerTest {
-    private val repository = mockk<SubscriptionRepository>()
+    private val repository = SubscriptionRepositoryImpl()
     private val manager = SubscriptionManager(repository)
 
     @Test

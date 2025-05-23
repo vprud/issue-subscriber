@@ -1,15 +1,18 @@
 package io.github.vprud
 
 import io.mockk.mockk
+import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+@ExtendWith(ExtensionDatabase::class)
 class GitHubIssueTrackerTest {
     private val gitHubClient = mockk<GitHubClient>()
-    private val subscriptionManager = mockk<SubscriptionManager>()
-    private val issueRepository = mockk<IssueRepository>()
+    private val subscriptionRepositoryImpl = SubscriptionRepositoryImpl()
+    private val subscriptionManager = SubscriptionManager(subscriptionRepositoryImpl)
+    private val issueRepository = IssueRepositoryImpl()
     private val tracker = GitHubIssueTracker(gitHubClient, subscriptionManager, issueRepository)
 
     @Test
