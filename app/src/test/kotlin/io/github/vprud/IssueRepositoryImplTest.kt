@@ -1,53 +1,15 @@
 package io.github.vprud
 
-import io.github.vprud.table.IssueTable
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.Schema
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+@ExtendWith(ExtensionDatabase::class)
 class IssueRepositoryImplTest {
-    private lateinit var repository: IssueRepositoryImpl
-    private val schema = Schema("test")
-    private val dbConfig =
-        DbConfig(
-            url = "jdbc:postgresql://localhost:5432/postgres",
-            user = "postgres",
-            password = "postgres",
-        )
-
-    @BeforeEach
-    fun setup() {
-        Database.connect(
-            url = dbConfig.url,
-            driver = "org.postgresql.Driver",
-            user = dbConfig.user,
-            password = dbConfig.password,
-        )
-
-        transaction {
-            SchemaUtils.createSchema(schema)
-            SchemaUtils.setSchema(schema)
-            SchemaUtils.create(IssueTable)
-        }
-
-        repository = IssueRepositoryImpl()
-    }
-
-    @AfterEach
-    fun tearDown() {
-        transaction {
-            SchemaUtils.drop(IssueTable)
-            SchemaUtils.dropSchema(schema, cascade = true)
-        }
-    }
+    private val repository = IssueRepositoryImpl()
 
     private fun createTestIssue(
         number: Int = 123,
@@ -90,8 +52,7 @@ class IssueRepositoryImplTest {
         runBlocking {
             val issue = createTestIssue()
 
-            newSuspendedTransaction {
-                SchemaUtils.setSchema(schema)
+            transaction {
                 repository.save(issue)
                 val exists = repository.exists(123, "owner/repo")
                 assertTrue(exists)
@@ -103,8 +64,7 @@ class IssueRepositoryImplTest {
         runBlocking {
             val issue = createTestIssue()
 
-            newSuspendedTransaction {
-                SchemaUtils.setSchema(schema)
+            transaction {
                 repository.save(issue)
                 repository.save(issue) // Try to save the same issue again
                 val exists = repository.exists(123, "owner/repo")
@@ -116,8 +76,7 @@ class IssueRepositoryImplTest {
     fun `exists should return false for non-existent issue`() =
         runBlocking {
             val result =
-                newSuspendedTransaction {
-                    SchemaUtils.setSchema(schema)
+                transaction {
                     repository.exists(999, "nonexistent/repo")
                 }
             assertFalse(result)
@@ -128,8 +87,7 @@ class IssueRepositoryImplTest {
         runBlocking {
             val issue = createTestIssue(body = null)
 
-            newSuspendedTransaction {
-                SchemaUtils.setSchema(schema)
+            transaction {
                 repository.save(issue)
                 val exists = repository.exists(123, "owner/repo")
                 assertTrue(exists)
@@ -141,8 +99,7 @@ class IssueRepositoryImplTest {
         runBlocking {
             val issue = createTestIssue(milestone = null)
 
-            newSuspendedTransaction {
-                SchemaUtils.setSchema(schema)
+            transaction {
                 repository.save(issue)
                 val exists = repository.exists(123, "owner/repo")
                 assertTrue(exists)
@@ -154,8 +111,7 @@ class IssueRepositoryImplTest {
         runBlocking {
             val issue = createTestIssue(labels = emptyList())
 
-            newSuspendedTransaction {
-                SchemaUtils.setSchema(schema)
+            transaction {
                 repository.save(issue)
                 val exists = repository.exists(123, "owner/repo")
                 assertTrue(exists)
@@ -167,8 +123,7 @@ class IssueRepositoryImplTest {
         runBlocking {
             val issue = createTestIssue()
 
-            newSuspendedTransaction {
-                SchemaUtils.setSchema(schema)
+            transaction {
                 repository.save(issue)
                 val exists = repository.exists(123, "owner/repo")
                 assertTrue(exists)

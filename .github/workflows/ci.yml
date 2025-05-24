@@ -1,0 +1,63 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          architecture: x64
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Check code quality with ktlint
+        run: ./gradlew ktlintCheck
+
+      - name: Run tests with coverage
+        run: ./gradlew test jacocoTestReport
+
+      - name: Verify report exists
+        run: ls app/build/reports/jacoco/test
+
+      - name: Check secret exists
+        run: |
+          if [ -z "${{ secrets.COVERALLS_REPO_TOKEN }}" ]; then
+            echo "❌ COVERALLS_REPO_TOKEN is NOT set"
+            exit 1
+          else
+            echo "✅ COVERALLS_REPO_TOKEN is available"
+            # Дополнительная проверка длины токена (не выводит сам токен)
+            echo "Token length: ${#COVERALLS_REPO_TOKEN}"
+          fi
+
+      - name: Upload to Coveralls
+        run: ./gradlew coverallsJacoco -Pcoveralls.jacoco.repoToken=${{ secrets.COVERALLS_REPO_TOKEN }} --no-configuration-cache
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
