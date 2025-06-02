@@ -1,25 +1,21 @@
 package io.github.vprud
 
-import io.github.vprud.GitHubIssue.Label
-import io.github.vprud.GitHubIssue.Milestone
+import io.github.vprud.domain.Issue
+import io.github.vprud.provider.github.GitHubIssue.Label
 
 fun testIssue(
     number: Int = 1,
     title: String = "Test Issue",
-    labels: List<Label> = emptyList(),
-    milestone: Milestone? = null,
-) = GitHubIssue(
-    url = "https://api.github.com/issues/$number",
+    labels: List<String> = emptyList(),
+) = Issue(
     repositoryUrl = "https://api.github.com/repos/owner/repo",
     htmlUrl = "https://github.com/owner/repo/issues/$number",
     number = number,
     title = title,
     labels = labels,
     state = "open",
-    milestone = milestone,
-    comments = 0,
-    createdAt = "2023-01-01T00:00:00Z",
-    updatedAt = "2023-01-01T00:00:00Z",
+    createdAt = java.time.Instant.parse("2023-01-01T00:00:00Z"),
+    updatedAt = java.time.Instant.parse("2023-01-01T00:00:00Z"),
     body = "Test issue body",
 )
 
