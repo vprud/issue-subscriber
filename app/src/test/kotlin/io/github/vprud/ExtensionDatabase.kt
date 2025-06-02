@@ -1,7 +1,8 @@
 package io.github.vprud
 
-import io.github.vprud.table.IssueTable
-import io.github.vprud.table.SubscriptionTable
+import io.github.vprud.databse.DbConfig
+import io.github.vprud.databse.table.IssueTable
+import io.github.vprud.databse.table.SubscriptionTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.Schema
